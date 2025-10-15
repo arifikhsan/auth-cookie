@@ -1,11 +1,10 @@
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardComponent from './component';
 
 export default async function DashboardPage() {
-  const token = (await cookies()).get('access_token')?.value;
-  const user = verifyToken(token);
+  const res = await fetch('http://localhost:3000/api/me', { cache: 'no-store' });
+  const data = await res.json();
+  const user = data;
 
   if (!user) redirect('/login');
 

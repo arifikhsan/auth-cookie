@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
 
 export default async function HomePage() {
-  const token = (await cookies()).get('access_token')?.value;
-  const user = verifyToken(token);
+  const res = await fetch('http://localhost:3000/api/me', { cache: 'no-store' });
+  const data = await res.json();
+  const user = data;
 
   return (
     <main className="p-6">

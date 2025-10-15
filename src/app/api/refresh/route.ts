@@ -1,12 +1,14 @@
 // app/api/refresh/route.ts
 import { NextResponse } from "next/server";
-import { verifyToken, createToken } from "@/lib/auth";
+import { createToken } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { jwtDecode } from "jwt-decode";
 
 export async function POST() {
   const refresh = (await cookies()).get("refresh_token")?.value;
   //   const refresh = req.headers.get('cookie').get('refresh_token');
-  const refreshData = verifyToken(refresh, "refresh");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const refreshData: any = jwtDecode(refresh || '');
 
   if (!refreshData) {
     // 🚫 Instead of returning 401, we send 200 with an error message

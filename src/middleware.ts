@@ -1,52 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, createToken } from './lib/auth';
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function middleware(req: NextRequest) {
-  const access = req.cookies.get('access_token')?.value;
-  const refresh = req.cookies.get('refresh_token')?.value;
-  const { pathname } = req.nextUrl;
+export function middleware(req: NextRequest) {
+  const accessData = req.cookies.get('access_token')?.value;
+  const refreshData = req.cookies.get('refresh_token')?.value;
 
-  const accessData = verifyToken(access, 'access');
-  const refreshData = verifyToken(refresh, 'refresh');
+  const isLoginPage = req.nextUrl.pathname.startsWith('/login');
 
-  // If visiting /dashboard and access expired, try to auto-refresh
-  if (pathname.startsWith('/dashboard') && !accessData && refreshData) {
-    const newAccess = createToken(refreshData.email, 'access');
-    const newRefresh = createToken(refreshData.email, 'refresh');
-
-    const res = NextResponse.next();
-    res.cookies.set('access_token', newAccess, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-    });
-    res.cookies.set('refresh_token', newRefresh, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-    });
-    return res;
-  }
-
-  // If visiting /dashboard and no valid tokens, redirect to login
-  if (pathname.startsWith('/dashboard') && !accessData && !refreshData) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
-
-  // If visiting /login and already logged in → redirect to dashboard
-  if (pathname.startsWith('/login') && accessData) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+  // Redirect to /login if no tokens and not already there
+  if (!accessData && !refreshData && !isLoginPage) {
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/login', '/dashboard'],
+  // Match all app routes except /login
+  matcher: ['/((?!login|api|_next/static|_next/image|favicon.ico).*)'],
 };

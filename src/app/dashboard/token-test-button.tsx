@@ -26,7 +26,7 @@ export default function TokenTestButton() {
       </button>
 
       {response && (
-        <pre className="mt-4 p-3 bg-gray-100 rounded text-sm whitespace-pre-wrap">
+        <pre className="mt-4 p-3 bg-gray-100 rounded text-sm whitespace-pre-wrap break-words">
           {response}
         </pre>
       )}
