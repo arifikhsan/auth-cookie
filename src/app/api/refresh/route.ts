@@ -25,6 +25,7 @@ export async function POST() {
   const res = NextResponse.json({
     success: true,
     message: "Access token refreshed",
+    accessToken: newAccess,
   });
 
   res.cookies.set("access_token", newAccess, {

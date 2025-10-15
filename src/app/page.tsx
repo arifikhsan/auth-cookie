@@ -1,7 +1,20 @@
-import Link from 'next/link';
+import { cookies } from "next/headers";
+import Link from "next/link";
 
 export default async function HomePage() {
-  const res = await fetch('http://localhost:3000/api/me', { cache: 'no-store' });
+  const cookieStore = await cookies();
+
+  // build the cookie header manually
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+  const res = await fetch("http://localhost:3000/api/me", {
+    cache: "no-store",
+    headers: {
+      Cookie: cookieHeader, // ✅ forward cookies manually
+    },
+  });
   const data = await res.json();
   const user = data;
 
@@ -11,7 +24,7 @@ export default async function HomePage() {
 
       {user ? (
         <>
-          <p>Welcome back, {user.email}</p>
+          <p>Welcome back, {JSON.stringify(user)}</p>
           <Link href="/dashboard" className="text-blue-500 underline">
             Go to dashboard
           </Link>
