@@ -37,19 +37,24 @@ export async function GET() {
       });
       const refreshData = await refreshRes.json();
 
-      if (refreshData.success) {
-        return NextResponse.json({
-          success: true,
-          message: "Token refreshed",
-          accessToken: refreshData.accessToken,
-        });
-      } else {
-        return NextResponse.json({
+      if (!refreshData.success) {
+        // ❌ Refresh failed — clear cookies
+        const response = NextResponse.json({
           success: false,
-          message: "Refresh failed",
-          accessToken: null,
+          message: "Refresh failed, logged out",
         });
+        response.cookies.delete("access_token");
+        response.cookies.delete("refresh_token");
+
+        return response;
       }
+
+      // ✅ Success — return refreshed token
+      return NextResponse.json({
+        success: true,
+        message: "Token refreshed",
+        accessToken: refreshData.accessToken,
+      });
     }
 
     // ✅ Still valid
@@ -60,10 +65,13 @@ export async function GET() {
     });
   } catch (err) {
     console.log(err);
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: false,
       message: "Invalid token",
       accessToken: null,
     });
+    response.cookies.delete("access_token");
+    response.cookies.delete("refresh_token");
+    return response;
   }
 }

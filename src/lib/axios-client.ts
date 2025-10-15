@@ -24,4 +24,18 @@ axiosClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // If refresh endpoint failed or returned 401
+    if (error.response?.status === 401 || error.response?.data?.message?.includes("Refresh failed")) {
+      // Optionally call /api/logout to clear cookies
+      await fetch("/api/logout", { method: "POST" });
+      // Redirect to login page
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosClient;

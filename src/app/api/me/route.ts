@@ -5,6 +5,22 @@ import { cookies } from "next/headers";
 
 export async function GET() {
   const cookieStore = await cookies();
+
+  const accessToken = cookieStore.get("access_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
+
+  // 1️⃣ Check if tokens exist at all
+  if (!accessToken || !refreshToken) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "No access token",
+        user: null,
+      },
+      { status: 200 }
+    );
+  }
+  
   const cookieHeader = cookieStore
     .getAll()
     .map((c) => `${c.name}=${c.value}`)
