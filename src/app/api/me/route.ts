@@ -26,7 +26,7 @@ export async function GET() {
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const freshResponse = await fetch(`http://localhost:3000/api/get-fresh-access-token`, {
+  const freshResponse = await fetch(`${process.env.APP_URL}/api/get-fresh-access-token`, {
     method: "GET",
     credentials: "include",
     headers: {

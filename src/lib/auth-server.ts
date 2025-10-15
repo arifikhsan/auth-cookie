@@ -8,7 +8,7 @@ interface AuthPayload {
 
 export async function getAuth(cookieHeader?: string) {
   try {
-    const res = await axiosServer.get('http://localhost:3000/api/me', {
+    const res = await axiosServer.get(`${process.env.APP_URL}/api/me`, {
       headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
       withCredentials: true,
     });

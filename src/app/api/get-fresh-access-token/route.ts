@@ -28,7 +28,7 @@ export async function GET() {
     // If token expires in <60s → refresh
     if (payload.exp && payload.exp - now < 60) {
       console.log("🔄 Access token about to expire, refreshing...");
-      const refreshRes = await fetch(`http://localhost:3000/api/refresh`, {
+      const refreshRes = await fetch(`${process.env.APP_URL}/api/refresh`, {
         method: "POST",
         credentials: "include",
         headers: {

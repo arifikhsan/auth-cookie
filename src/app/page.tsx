@@ -9,7 +9,7 @@ export default async function HomePage() {
     .getAll()
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
-  const res = await fetch("http://localhost:3000/api/me", {
+  const res = await fetch(`${process.env.APP_URL}/api/me`, {
     cache: "no-store",
     headers: {
       Cookie: cookieHeader, // ✅ forward cookies manually
