@@ -37,6 +37,17 @@ export default async function HomePage() {
           </Link>
         </>
       )}
+
+      <br />
+      <Link href={'/'}>Home</Link>
+      <br />
+      <Link href={'/dashboard'}>Dashboard</Link>
+      <br />
+      <Link href={'/dashboard/secret'}>Dashboard secret</Link>
+      <br />
+      <Link href={'/secretroom/csr'}>Secretrom CSR</Link>
+      <br />
+      <Link href={'/secretroom/ssr'}>Secretrom SSR</Link>
     </main>
   );
 }

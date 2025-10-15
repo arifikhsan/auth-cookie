@@ -25,9 +25,6 @@ export default async function DashboardPage() {
     <div className="p-6">
       <h1 className="text-xl">Dashboard</h1>
       <p>Logged in as {JSON.stringify(user)}</p>
-      {/* <form action="/api/logout" method="POST">
-        <button className="mt-4 bg-red-500 text-white px-3 py-2 rounded">Logout</button>
-      </form> */}
       <DashboardComponent />
     </div>
   );
