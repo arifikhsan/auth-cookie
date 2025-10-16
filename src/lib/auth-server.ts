@@ -1,4 +1,5 @@
 'use server'
+import 'server-only'
 
 import axiosServer from '@/lib/axios-server'; // your configured SSR axios instance
 import { cookies } from 'next/headers';
