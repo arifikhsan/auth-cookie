@@ -25,6 +25,11 @@ export async function GET() {
     const payload = decodeJwt(accessToken);
     const now = Math.floor(Date.now() / 1000);
 
+    console.log('now: ', now)
+    console.log('payload.exp: ', payload.exp)
+    console.log('now < 60: ', now < 60)
+    console.log('payload.exp && payload.exp - now < 60: ', payload.exp && payload.exp - now < 60)
+
     // If token expires in <60s → refresh
     if (payload.exp && payload.exp - now < 60) {
       console.log("🔄 Access token about to expire, refreshing...");
@@ -49,12 +54,19 @@ export async function GET() {
         return response;
       }
 
-      // ✅ Success — return refreshed token
-      return NextResponse.json({
+      // ✅ Copy new cookies from refreshRes headers
+      const setCookieHeaders = refreshRes.headers.getSetCookie?.() || [];
+      const response = NextResponse.json({
         success: true,
         message: "Token refreshed",
         accessToken: refreshData.accessToken,
       });
+
+      for (const cookie of setCookieHeaders) {
+        response.headers.append("Set-Cookie", cookie);
+      }
+
+      return response;
     }
 
     // ✅ Still valid
