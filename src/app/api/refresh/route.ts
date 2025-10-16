@@ -28,16 +28,20 @@ export async function POST() {
     accessToken: newAccess,
   });
 
+  const isProd = process.env.NODE_ENV === "production";
+
   res.cookies.set("access_token", newAccess, {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
+    domain: isProd ? "auth-cookie-wine.vercel.app" : undefined,
     sameSite: "lax",
     path: "/",
   });
 
   res.cookies.set("refresh_token", newRefresh, {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
+    domain: isProd ? "auth-cookie-wine.vercel.app" : undefined,
     sameSite: "lax",
     path: "/",
   });
