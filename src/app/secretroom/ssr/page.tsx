@@ -3,9 +3,10 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 export default async function SecretRoomSSR() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ');
-  const { status, payload } = await getAuth(cookieHeader);
+  // const cookieStore = await cookies();
+  // const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ');
+  // const { status, payload } = await getAuth(cookieHeader);
+  const { status, payload } = await getAuth();
   console.log('status secretroom ssr: ', status)
 
   if (status === 'unauthenticated') {
