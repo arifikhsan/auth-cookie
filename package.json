@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@upstash/redis": "^1.35.6",
     "axios": "^1.12.2",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",

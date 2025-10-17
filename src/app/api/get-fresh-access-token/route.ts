@@ -2,88 +2,91 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { decodeJwt } from "@/lib/auth"; // assume you have this
+import { runGlobalRefreshLock } from "../refresh/refresh-lock";
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-  const accessToken = cookieStore.get("access_token")?.value;
-  console.log("accessToken: ", accessToken);
+  return runGlobalRefreshLock(async () => {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+    const accessToken = cookieStore.get("access_token")?.value;
+    // console.log("accessToken: ", accessToken);
 
-  if (!accessToken) {
-    return NextResponse.json({
-      success: false,
-      message: "No access token found",
-      accessToken: null,
-    });
-  }
-
-  try {
-    // ✅ Check expiration
-    const payload = decodeJwt(accessToken);
-    const now = Math.floor(Date.now() / 1000);
-
-    console.log('now: ', now)
-    console.log('payload.exp: ', payload.exp)
-    console.log('now < 60: ', now < 60)
-    console.log('payload.exp && payload.exp - now < 60: ', payload.exp && payload.exp - now < 60)
-
-    // If token expires in <60s → refresh
-    if (payload.exp && payload.exp - now < 60) {
-      console.log("🔄 Access token about to expire, refreshing...");
-      const refreshRes = await fetch(`${process.env.APP_URL}/api/refresh`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Cookie: cookieHeader, // ⬅️ forward cookies manually
-        },
+    if (!accessToken) {
+      return NextResponse.json({
+        success: false,
+        message: "No access token found",
+        accessToken: null,
       });
-      const refreshData = await refreshRes.json();
+    }
 
-      if (!refreshData.success) {
-        // ❌ Refresh failed — clear cookies
-        const response = NextResponse.json({
-          success: false,
-          message: "Refresh failed, logged out",
+    try {
+      // ✅ Check expiration
+      const payload = decodeJwt(accessToken);
+      const now = Math.floor(Date.now() / 1000);
+
+      // console.log('now: ', now)
+      // console.log('payload.exp: ', payload.exp)
+      // console.log('now < 60: ', now < 60)
+      // console.log('payload.exp && payload.exp - now < 60: ', payload.exp && payload.exp - now < 60)
+
+      // If token expires in <60s → refresh
+      if (payload.exp && payload.exp - now < 60) {
+        console.log("🔄 Access token about to expire, refreshing...");
+        const refreshRes = await fetch(`${process.env.APP_URL}/api/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            Cookie: cookieHeader, // ⬅️ forward cookies manually
+          },
         });
-        response.cookies.delete("access_token");
-        response.cookies.delete("refresh_token");
+        const refreshData = await refreshRes.json();
+
+        if (!refreshData.success) {
+          // ❌ Refresh failed — clear cookies
+          const response = NextResponse.json({
+            success: false,
+            message: "Refresh failed, logged out",
+          });
+          response.cookies.delete("access_token");
+          response.cookies.delete("refresh_token");
+
+          return response;
+        }
+
+        // ✅ Copy new cookies from refreshRes headers
+        const setCookieHeaders = refreshRes.headers.getSetCookie?.() || [];
+        const response = NextResponse.json({
+          success: true,
+          message: "Token refreshed",
+          accessToken: refreshData.accessToken,
+        });
+
+        for (const cookie of setCookieHeaders) {
+          response.headers.append("Set-Cookie", cookie);
+        }
 
         return response;
       }
 
-      // ✅ Copy new cookies from refreshRes headers
-      const setCookieHeaders = refreshRes.headers.getSetCookie?.() || [];
-      const response = NextResponse.json({
+      // ✅ Still valid
+      return NextResponse.json({
         success: true,
-        message: "Token refreshed",
-        accessToken: refreshData.accessToken,
+        message: "Token still valid",
+        accessToken,
       });
-
-      for (const cookie of setCookieHeaders) {
-        response.headers.append("Set-Cookie", cookie);
-      }
-
+    } catch (err) {
+      console.log(err);
+      const response = NextResponse.json({
+        success: false,
+        message: "Invalid token",
+        accessToken: null,
+      });
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
       return response;
     }
-
-    // ✅ Still valid
-    return NextResponse.json({
-      success: true,
-      message: "Token still valid",
-      accessToken,
-    });
-  } catch (err) {
-    console.log(err);
-    const response = NextResponse.json({
-      success: false,
-      message: "Invalid token",
-      accessToken: null,
-    });
-    response.cookies.delete("access_token");
-    response.cookies.delete("refresh_token");
-    return response;
-  }
+  });
 }
